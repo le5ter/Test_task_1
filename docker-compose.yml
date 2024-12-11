@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  postgres:
+    build:
+      dockerfile: ./postgres/Dockerfile
+    ports:
+      - "5430:5432"
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  bet_maker:
+    build:
+      dockerfile: ./services/bet_maker.Dockerfile
+    ports:
+      - "8001:8001"
+    depends_on:
+      - postgres
+    environment:
+      - LINE_PROVIDER_API_BASE=http://line_provider:8000
+      - POSTGRES_CONNECTION_STRING_ASYNC=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/postgres
+
+  line_provider:
+    build:
+      dockerfile: ./services/line_provider.Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+    environment:
+      - BET_MAKER_API_BASE=http://bet_maker:8001
+      - POSTGRES_CONNECTION_STRING_ASYNC=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/postgres
+
+volumes:
+  db_data:
+    driver: local
