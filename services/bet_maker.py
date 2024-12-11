@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Path
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from httpx import AsyncClient
@@ -81,3 +81,18 @@ async def get_bets() -> list:
             result.append(serialized)
 
     return result
+
+
+@app.get('/bet/{bet_id}')
+async def get_bet(bet_id: str = Path()) -> dict:
+    async with postgres.client() as session:
+        session: AsyncSession
+        bet = (await session.execute(
+            select(BetPg)
+            .filter_by(id=bet_id)
+        )).scalar_one_or_none()
+
+        if bet:
+            return bet.to_dict()
+
+    return {}
