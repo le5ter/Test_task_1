@@ -22,7 +22,7 @@ postgres = PGManager()
 @app.get('/events')
 async def get_events() -> list:
     """
-        Получение списка event'ов
+        Получение списка событий
     """
     async with AsyncClient(verify=False) as client:
         response = await client.get(f'{LINE_PROVIDER_API_BASE}/events')
@@ -32,6 +32,9 @@ async def get_events() -> list:
 
 @app.post('/events/action')
 async def on_event_action(event: Event) -> None:
+    """
+        Callback url для обновления статуса ставок если статус события изменился
+    """
     if event.state not in (EventState.FINISHED_WIN, EventState.FINISHED_LOSE):
         return
 
@@ -58,6 +61,9 @@ async def on_event_action(event: Event) -> None:
 
 @app.post('/bet')
 async def create_bet(bet: Bet) -> dict:
+    """
+        Совершение ставки на событие
+    """
     new_bet = BetPg(**bet.model_dump(by_alias=True))
 
     async with postgres.client() as session:
@@ -69,6 +75,9 @@ async def create_bet(bet: Bet) -> dict:
 
 @app.get('/bets')
 async def get_bets() -> list:
+    """
+        Получение списка ставок
+    """
     result = []
     async with postgres.client() as session:
         session: AsyncSession
@@ -85,6 +94,9 @@ async def get_bets() -> list:
 
 @app.get('/bet/{bet_id}')
 async def get_bet(bet_id: str = Path()) -> dict:
+    """
+        Получение ставки по id
+    """
     async with postgres.client() as session:
         session: AsyncSession
         bet = (await session.execute(

@@ -19,6 +19,9 @@ app = FastAPI()
 
 @app.put('/event')
 async def create_event(event: Event) -> dict:
+    """
+        Создание/Изменение события
+    """
     if event.event_id not in events:
         events[event.event_id] = event
         return {}
@@ -37,6 +40,9 @@ async def create_event(event: Event) -> dict:
 
 @app.get('/event/{event_id}')
 async def get_event(event_id: str = Path()):
+    """
+        Получение события по id
+    """
     if event_id in events:
         return events[event_id]
 
@@ -45,4 +51,7 @@ async def get_event(event_id: str = Path()):
 
 @app.get('/events')
 async def get_events() -> list:
+    """
+        Получение списка событий
+    """
     return list(e for e in events.values() if time.time() < e.deadline)
